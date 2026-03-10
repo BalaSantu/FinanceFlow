@@ -1,0 +1,2 @@
+# FinanceFlow
+Dialy finance manager 
