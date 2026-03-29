@@ -914,11 +914,22 @@ select.inp option{background:var(--bg3);color:var(--t1);}
 <div class="ov" id="pdfM" onclick="bgc(event,'pdfM')">
 <div class="sheet">
   <div class="hdl"></div>
-  <div class="st">📧 PDF Report</div>
+  <div class="st">📄 PDF Report</div>
   <div id="pdfLbl" style="font-size:12px;color:var(--t3);margin-bottom:12px;"></div>
   <div class="ir"><span class="lbl">Email (shown on PDF)</span><input class="inp" type="email" id="rEm" placeholder="you@gmail.com"></div>
-  <button class="btn btn-c btn-f" onclick="genPDF(false)">📥 Download Monthly PDF</button>
-  <div style="height:7px;"></div>
+
+  <span class="lbl">Report Type</span>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+    <button class="btn btn-c btn-f" onclick="genPDF(false)">📅 Monthly Report</button>
+    <button class="btn btn-ol btn-f" onclick="genPDF(true)">📆 Yearly Report</button>
+    <button class="btn btn-g btn-f" onclick="genFullReport()">📊 Full Financial Report</button>
+  </div>
+
+  <div style="background:rgba(18,217,138,.07);border:1px solid rgba(18,217,138,.2);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--t2);margin-bottom:14px;">
+    <b style="color:var(--g2);">Full Report includes:</b><br>
+    Net Worth · Investments · Property · Lent · Borrowed · Given/Help · Donations · All EMIs & Bills
+  </div>
+
   <button class="btn btn-gh btn-f" onclick="cm('pdfM')">Cancel</button>
 </div>
 </div>
@@ -3343,6 +3354,153 @@ function genPDF(yearly){
   if(!w){showToast('⚠️ Allow popups to get PDF','err');return;}
   w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
   showToast('📄 Report opened — Save as PDF','ok');
+}
+
+function genFullReport(){
+  const email=document.getElementById('rEm')?.value?.trim()||D.email||'';
+  if(email){D.email=email;sv();}cm('pdfM');
+  const tb=computeTotalBal();
+  const now=new Date().toLocaleString('en-IN');
+  let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>FinanceFlow Full Report</title><style>
+    *{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,'Segoe UI',sans-serif;background:#fff;color:#1e293b;font-size:12px;}
+    .page{max-width:780px;margin:0 auto;padding:26px 30px;}
+    h1{font-size:22px;font-weight:900;color:#0e7490;margin-bottom:2px;}
+    .sub{font-size:12px;color:#64748b;margin-bottom:3px;}.meta{font-size:10px;color:#94a3b8;padding-bottom:10px;border-bottom:2px solid #06b6d4;margin-bottom:16px;}
+    .net{background:linear-gradient(135deg,#0c4a6e,#164e63);color:#fff;border-radius:9px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+    .box{background:#f1f5f9;border-radius:9px;padding:11px;text-align:center;border-top:3px solid #06b6d4;}
+    .box.g{border-top-color:#10b981;}.box.r{border-top-color:#f43f5e;}.box.a{border-top-color:#f59e0b;}.box.p{border-top-color:#6366f1;}
+    .box .v{font-size:14px;font-weight:900;}.box .l{font-size:9px;color:#64748b;margin-top:2px;text-transform:uppercase;}
+    .box.g .v{color:#10b981;}.box.r .v{color:#f43f5e;}.box.a .v{color:#f59e0b;}.box.p .v{color:#6366f1;}
+    .sec{margin-bottom:16px;page-break-inside:avoid;}
+    .stt{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#0e7490;padding:5px 0;border-bottom:1.5px solid #e2e8f0;margin-bottom:7px;}
+    table{width:100%;border-collapse:collapse;font-size:11px;}
+    th{background:#f8fafc;color:#64748b;font-size:9px;font-weight:800;text-transform:uppercase;padding:5px 7px;text-align:left;border-bottom:1px solid #e2e8f0;}
+    td{padding:5px 7px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+    tr:nth-child(even) td{background:#fafafa;}
+    .tf td{background:#f1f5f9!important;font-weight:800;border-top:2px solid #e2e8f0;}
+    .tr{text-align:right;}.g{color:#10b981;}.r{color:#f43f5e;}.a{color:#f59e0b;}.b{color:#3b82f6;}.gr{color:#94a3b8;}.p{color:#6366f1;}
+    .badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;}
+    .badge.g{background:#d1fae5;color:#065f46;}.badge.r{background:#fee2e2;color:#991b1b;}.badge.a{background:#fef3c7;color:#92400e;}
+    .ft{margin-top:20px;padding-top:9px;border-top:2px solid #06b6d4;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}@page{margin:10mm;}
+  </style></head><body><div class="page">
+  <h1>💰 FinanceFlow PRO — Full Financial Report</h1>
+  <div class="sub">Complete snapshot of your finances</div>
+  <div class="meta">Generated: ${now}${email?' | '+email:''}</div>`;
+
+  // Net Worth
+  html+=`<div class="net">
+    <div><div style="font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;">Total Net Worth</div>
+    <div style="font-size:10px;opacity:.6;margin-top:2px;">Assets minus liabilities</div></div>
+    <div style="font-size:24px;font-weight:900;color:${tb.total>=0?'#34d399':'#fb7185'};">${R(tb.total)}</div>
+  </div>`;
+
+  // Asset breakdown
+  html+=`<div class="sec"><div class="stt">Net Worth Breakdown</div>
+  <table><tr><th>Component</th><th class="tr">Amount</th></tr>
+  <tr><td>🏦 Bank Balance</td><td class="tr b">${R(tb.bank)}</td></tr>
+  <tr><td>📲 Cash / UPI</td><td class="tr b">${R(tb.cash)}</td></tr>
+  <tr><td>📈 Investments</td><td class="tr g">${R(tb.investments)}</td></tr>
+  <tr><td>💸 Lent (to collect)</td><td class="tr a">${R(tb.pendingLent)}</td></tr>
+  ${tb.givenInAssets>0?`<tr><td>💫 Given/Help (counted)</td><td class="tr a">${R(tb.givenInAssets)}</td></tr>`:''}
+  ${tb.propValue>0?`<tr><td>🏘️ Property Value</td><td class="tr g">${R(tb.propValue)}</td></tr>`:''}
+  <tr><td>📦 Other Assets</td><td class="tr a">${R(tb.other)}</td></tr>
+  <tr><td style="color:#f43f5e;">🤝 Borrowed (owed)</td><td class="tr r">-${R(tb.pendingBor)}</td></tr>
+  <tr><td style="color:#f43f5e;">🏦 EMI Remaining</td><td class="tr r">-${R(tb.emiDebt)}</td></tr>
+  <tr class="tf"><td>NET WORTH</td><td class="tr" style="color:${tb.total>=0?'#10b981':'#f43f5e'};">${R(tb.total)}</td></tr>
+  </table></div>`;
+
+  // Investments
+  if(D.investments&&D.investments.length){
+    const tInv=D.investments.reduce((s,i)=>s+Number(i.amount),0);
+    const tCur=D.investments.reduce((s,i)=>s+Number(i.current||i.amount),0);
+    html+=`<div class="sec"><div class="stt">Investments</div>
+    <table><tr><th>Type</th><th>Name</th><th>Date</th><th class="tr">Invested</th><th class="tr">Current</th><th class="tr">P&L</th></tr>`;
+    D.investments.forEach(inv=>{
+      const g=Number(inv.current||inv.amount)-Number(inv.amount);
+      html+=`<tr><td>${invLbl(inv.type).replace(/[^\w ]/g,'').trim()}</td><td>${inv.name}</td><td class="gr">${inv.date}</td><td class="tr b">${R(inv.amount)}</td><td class="tr">${R(inv.current||inv.amount)}</td><td class="tr ${g>=0?'g':'r'}">${g>=0?'+':''}${R(g)}</td></tr>`;
+    });
+    html+=`<tr class="tf"><td colspan="3">Total</td><td class="tr b">${R(tInv)}</td><td class="tr">${R(tCur)}</td><td class="tr ${tCur-tInv>=0?'g':'r'}">${tCur-tInv>=0?'+':''}${R(tCur-tInv)}</td></tr></table></div>`;
+  }
+
+  // Property
+  if(D.properties&&D.properties.length){
+    html+=`<div class="sec"><div class="stt">Property / Assets</div>
+    <table><tr><th>Property</th><th>Location</th><th class="tr">Agreement</th><th class="tr">Principal Paid</th><th class="tr">Interest Paid</th><th class="tr">Current Value</th></tr>`;
+    D.properties.forEach(p=>{
+      const pays=p.payments||[];
+      const prin=pays.reduce((s,pay)=>s+Number(pay.principal||0),0);
+      const intr=pays.reduce((s,pay)=>s+Number(pay.interest||0),0);
+      html+=`<tr><td>${p.name}</td><td class="gr">${p.location||'-'}</td><td class="tr b">${R(p.totalCost)}</td><td class="tr g">${R(prin)}</td><td class="tr r">${R(intr)}</td><td class="tr g">${R(p.currentValue||p.totalCost)}</td></tr>`;
+      if(pays.length){
+        html+=`<tr><td colspan="6" style="padding:0 7px 7px 16px;">
+          <table style="width:100%;font-size:10px;"><tr><th>Date</th><th>Notes</th><th class="tr">Principal</th><th class="tr">Interest</th><th class="tr">Total</th></tr>`;
+        pays.forEach(pay=>{html+=`<tr><td>${pay.date}</td><td class="gr">${pay.notes||'-'}</td><td class="tr">${R(pay.principal||0)}</td><td class="tr r">${R(pay.interest||0)}</td><td class="tr b">${R(Number(pay.principal||0)+Number(pay.interest||0))}</td></tr>`;});
+        html+=`</table></td></tr>`;
+      }
+    });
+    html+=`</table></div>`;
+  }
+
+  // Lent
+  if(D.lent&&D.lent.length){
+    const pending=D.lent.filter(l=>!l.returned);
+    html+=`<div class="sec"><div class="stt">Money Lent</div>
+    <table><tr><th>Person</th><th>Date</th><th>Return By</th><th>Status</th><th class="tr">Amount</th></tr>`;
+    D.lent.forEach(l=>{html+=`<tr><td>${l.name}</td><td class="gr">${l.date}</td><td class="gr">${l.returnDate||'-'}</td><td><span class="badge ${l.returned?'g':'a'}">${l.returned?'Returned':'Pending'}</span></td><td class="tr a">${R(l.amount)}</td></tr>`;});
+    html+=`<tr class="tf"><td colspan="4">Total Pending</td><td class="tr a">${R(pending.reduce((s,l)=>s+Number(l.amount),0))}</td></tr></table></div>`;
+  }
+
+  // Borrowed
+  if(D.borrowed&&D.borrowed.length){
+    const pending=D.borrowed.filter(b=>!b.returned);
+    html+=`<div class="sec"><div class="stt">Money Borrowed</div>
+    <table><tr><th>Person</th><th>Date</th><th>Return By</th><th>Status</th><th class="tr">Amount</th></tr>`;
+    D.borrowed.forEach(b=>{html+=`<tr><td>${b.name}</td><td class="gr">${b.date}</td><td class="gr">${b.returnDate||'-'}</td><td><span class="badge ${b.returned?'g':'r'}">${b.returned?'Returned':'To Return'}</span></td><td class="tr r">${R(b.amount)}</td></tr>`;});
+    html+=`<tr class="tf"><td colspan="4">Total Pending</td><td class="tr r">${R(pending.reduce((s,b)=>s+Number(b.amount),0))}</td></tr></table></div>`;
+  }
+
+  // Given / Help
+  if(D.given&&D.given.length){
+    html+=`<div class="sec"><div class="stt">Given / Help</div>
+    <table><tr><th>Person</th><th>Date</th><th>Occasion</th><th>In Net Worth</th><th>Status</th><th class="tr">Amount</th></tr>`;
+    D.given.forEach(g=>{html+=`<tr><td>${g.name}</td><td class="gr">${g.date}</td><td class="gr">${g.occasion||'-'}</td><td>${g.inAssets?'Yes':'No'}</td><td><span class="badge ${g.returned?'g':'a'}">${g.returned?'Returned':'Pending'}</span></td><td class="tr a">${R(g.amount)}</td></tr>`;});
+    html+=`<tr class="tf"><td colspan="5">Total</td><td class="tr a">${R(D.given.reduce((s,g)=>s+Number(g.amount),0))}</td></tr></table></div>`;
+  }
+
+  // Donations
+  if(D.donations&&D.donations.length){
+    html+=`<div class="sec"><div class="stt">Donations</div>
+    <table><tr><th>Donated To</th><th>Date</th><th>Notes</th><th class="tr">Amount</th></tr>`;
+    [...D.donations].reverse().forEach(d=>{html+=`<tr><td>${d.to}</td><td class="gr">${d.date}</td><td class="gr">${d.notes||'-'}</td><td class="tr p">${R(d.amount)}</td></tr>`;});
+    html+=`<tr class="tf"><td colspan="3">Total Donated</td><td class="tr p">${R(D.donations.reduce((s,d)=>s+Number(d.amount),0))}</td></tr></table></div>`;
+  }
+
+  // Active EMIs
+  const allEmis=D.emis.filter(e=>{
+    const[sy,sm]=e.startMonth.split('-').map(Number);
+    const ed=new Date(sy,sm-1+Number(e.durationMonths));
+    return mk(ed)>curM;
+  });
+  if(allEmis.length){
+    html+=`<div class="sec"><div class="stt">Active EMIs</div>
+    <table><tr><th>Name</th><th>Bank</th><th>Started</th><th class="tr">Monthly</th><th class="tr">Remaining</th></tr>`;
+    allEmis.forEach(e=>{
+      const[sy,sm]=e.startMonth.split('-').map(Number);
+      const[cy,cm]=curM.split('-').map(Number);
+      const elapsed=Math.max(0,(cy*12+cm)-(sy*12+sm));
+      const remaining=Math.max(0,Number(e.durationMonths)-elapsed);
+      html+=`<tr><td>${e.name}${e.isCCEmi?' (CC EMI)':''}</td><td class="gr">${e.bank||'-'}</td><td class="gr">${e.startMonth}</td><td class="tr a">${R(e.amount)}</td><td class="tr r">${R(remaining*Number(e.amount))} (${remaining}mo)</td></tr>`;
+    });
+    html+=`</table></div>`;
+  }
+
+  html+=`<div class="ft"><span>FinanceFlow PRO — Full Report</span><span>${new Date().toLocaleDateString('en-IN')}</span></div></div></body></html>`;
+  const w=window.open('','_blank','width=900,height=700');
+  if(!w){showToast('⚠️ Allow popups to get PDF','err');return;}
+  w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
+  showToast('📊 Full report opened — Save as PDF','ok');
 }
 
 /* ── TAB NAV ── */
