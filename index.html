@@ -502,9 +502,17 @@ select.inp option{background:var(--bg3);color:var(--t1);}
 
 <!-- ═══════ BILLS ═══════ -->
 <div class="pg" id="pg-bills">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
     <div style="font-size:18px;font-weight:900;">Bills & Payments</div>
-    <button class="btn btn-ol btn-sm" onclick="openBillM()">+ Add</button>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-ol btn-sm" onclick="openQuickAddBill()" title="Add existing bill to this month">⚡ Quick</button>
+      <button class="btn btn-ol btn-sm" onclick="openBillM()">+ New</button>
+    </div>
+  </div>
+  <!-- Inactive bills toggle -->
+  <div id="inactiveBillsBanner" style="display:none;background:var(--bg3);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:11px;color:var(--t3);">Some bills are inactive</span>
+    <button onclick="toggleShowInactive()" style="background:none;border:none;color:var(--c2);font-size:11px;font-weight:700;cursor:pointer;" id="inactiveToggleBtn">Show inactive</button>
   </div>
   <div class="pills" id="bPills">
     <div class="pill on" onclick="setBF('all',this)">All</div>
@@ -1324,6 +1332,92 @@ Date,Description,Amount,Type
 </div>
 </div>
 
+<!-- PREPAY MODAL -->
+<div class="ov ov-center" id="prepayM">
+<div style="background:var(--bg1);border:1px solid var(--b2);border-radius:20px;padding:22px 18px;width:calc(100% - 36px);max-width:360px;">
+  <div style="font-size:16px;font-weight:900;text-align:center;margin-bottom:4px;">💰 Extra / Prepayment</div>
+  <div id="prepayEmiName" style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:16px;"></div>
+
+  <span class="lbl">Extra Amount Paid (₹)</span>
+  <input class="inp" type="number" id="prepayAmt" placeholder="Amount paid extra">
+
+  <span class="lbl">Payment Date</span>
+  <input class="inp" type="date" id="prepayDate">
+
+  <span class="lbl">What should happen after this prepayment?</span>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+    <label style="display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--b2);border-radius:11px;padding:11px 12px;cursor:pointer;">
+      <input type="radio" name="prepayType" id="prepayShorten" value="shorten" checked style="margin-top:2px;flex-shrink:0;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--t1);">Reduce Tenure</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px;">Same monthly EMI — fewer months remaining</div>
+      </div>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--b2);border-radius:11px;padding:11px 12px;cursor:pointer;">
+      <input type="radio" name="prepayType" id="prepayReduce" value="reduce" style="margin-top:2px;flex-shrink:0;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--t1);">Reduce EMI Amount</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px;">Same tenure — lower monthly EMI going forward</div>
+      </div>
+    </label>
+  </div>
+
+  <div id="prepayCalc" style="background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--t2);display:none;"></div>
+
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-gh" style="flex:1;" onclick="cm('prepayM')">Cancel</button>
+    <button class="btn btn-g" style="flex:1;" onclick="savePrepay()">✅ Confirm</button>
+  </div>
+</div>
+</div>
+
+<!-- PRECLOSURE MODAL -->
+<div class="ov ov-center" id="preclosureM">
+<div style="background:var(--bg1);border:1px solid var(--b2);border-radius:20px;padding:22px 18px;width:calc(100% - 36px);max-width:360px;">
+  <div style="font-size:16px;font-weight:900;text-align:center;margin-bottom:4px;">✅ Loan Preclosure</div>
+  <div id="preclosureEmiName" style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:16px;"></div>
+
+  <div style="background:rgba(18,217,138,.08);border:1px solid rgba(18,217,138,.2);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;color:var(--t2);line-height:1.8;">
+    This will mark the loan as <b style="color:var(--g2);">fully closed</b>. It will no longer appear in active EMIs or Net Worth debt calculations.
+  </div>
+
+  <span class="lbl">Preclosure Amount Paid (₹)</span>
+  <input class="inp" type="number" id="preclosureAmt" placeholder="Total amount paid to close loan">
+
+  <span class="lbl">Preclosure Date</span>
+  <input class="inp" type="date" id="preclosureDate">
+
+  <span class="lbl">Notes (optional)</span>
+  <input class="inp" type="text" id="preclosureNotes" placeholder="e.g. Closed with bank, foreclosure charges…">
+
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="btn btn-gh" style="flex:1;" onclick="cm('preclosureM')">Cancel</button>
+    <button class="btn btn-g" style="flex:1;" onclick="savePreclosure()">✅ Close Loan</button>
+  </div>
+</div>
+</div>
+
+<!-- QUICK ADD BILL MODAL -->
+<div class="ov" id="quickBillM" onclick="bgc(event,'quickBillM')">
+<div class="sheet">
+  <div class="hdl"></div>
+  <div class="st">⚡ Quick Add Bill</div>
+  <div style="font-size:11px;color:var(--t3);margin-bottom:14px;">Select from your existing bills to enable for <span id="quickBillMonth" style="color:var(--c2);font-weight:700;"></span></div>
+
+  <!-- Active bills this month -->
+  <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px;">📋 All Your Bills</div>
+  <div id="quickBillList" style="display:flex;flex-direction:column;gap:7px;max-height:55vh;overflow-y:auto;margin-bottom:14px;"></div>
+
+  <!-- Manage inactive -->
+  <div style="border-top:1px solid var(--b1);padding-top:12px;margin-bottom:8px;">
+    <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:8px;">⏸️ Inactive Bills</div>
+    <div id="inactiveBillList" style="display:flex;flex-direction:column;gap:7px;"></div>
+  </div>
+
+  <button class="btn btn-gh btn-f" onclick="cm('quickBillM')">Close</button>
+</div>
+</div>
+
 <!-- CONFIRM DELETE -->
 <div class="ov ov-center" id="cfM">
 <div class="cfbox">
@@ -1356,7 +1450,7 @@ Date,Description,Amount,Type
 const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-let D={salary:0,emis:[],bills:[],transactions:[],investments:[],lent:[],borrowed:[],donations:[],given:[],properties:[],payments:{},email:'',
+let D={salary:0,emis:[],bills:[],transactions:[],investments:[],lent:[],borrowed:[],donations:[],given:[],properties:[],payments:{},emiAmounts:{},billAmounts:{},billSkip:{},emiSkip:{},email:'',
   bankBal:0,cashBal:0,otherAssets:0};
 let curM=mk(new Date()), tType='credit', tCat='personal', billF='all', txnF='all', moreT='invest';
 let eEmiId=null, eBillId=null, eInvId=null;
@@ -1379,7 +1473,10 @@ function ld(){
         donations:p.donations||[],
         given:p.given||[],
         properties:p.properties||[],
+        emiAmounts:p.emiAmounts||{},
         billAmounts:p.billAmounts||{},
+        billSkip:p.billSkip||{},
+        emiSkip:p.emiSkip||{},
         payments:p.payments||{},
         email:p.email||'',
         bankBal:p.bankBal||0,
@@ -1420,19 +1517,27 @@ function buildMSel(){
 function bES(){
   const s=document.getElementById('eSt'); if(!s)return; s.innerHTML='';
   const n=new Date();
+  const todayM=mk(n);
   for(let d=-36;d<=60;d++){
     const dt=new Date(n.getFullYear(),n.getMonth()+d,1);
     const k=mk(dt),o=document.createElement('option');
     o.value=k; o.textContent=MF[dt.getMonth()]+' '+dt.getFullYear();
-    if(k===curM)o.selected=true; s.appendChild(o);
+    if(k===todayM)o.selected=true; s.appendChild(o);
   }
 }
 function onMC(){curM=document.getElementById('mSel').value;renderAll();}
+function fmtM(m){const[y,mo]=m.split('-').map(Number);return MS[mo-1]+' '+y;}
 
 /* ── BILLS FOR MONTH ── */
 function getBills(m){
   return D.bills.filter(b=>{
     if(b.recur==='once')return b.billMonth===m;
+    // Never show before startMonth
+    if(b.startMonth&&m<b.startMonth)return false;
+    // If inactive — hide from all months after inactiveFrom
+    if(b.inactive&&b.inactiveFrom&&m>=b.inactiveFrom)return false;
+    // If skipped for this specific month
+    if(D.billSkip&&D.billSkip[b.id+'_'+m])return false;
     if(b.recur==='monthly')return true;
     if(b.recur==='quarterly'){
       const[by,bm]=b.startMonth.split('-').map(Number),[cy,cm]=m.split('-').map(Number);
@@ -1450,13 +1555,76 @@ function getBills(m){
   });
 }
 
+// Toggle skip for a bill in a specific month
+function toggleBillSkip(billId){
+  if(!D.billSkip)D.billSkip={};
+  const key=billId+'_'+curM;
+  D.billSkip[key]=!D.billSkip[key];
+  sv();renderAll();
+  showToast(D.billSkip[key]?'Bill hidden for '+fmtM(curM):'Bill shown for '+fmtM(curM),'ok');
+}
+
+// Toggle skip EMI for a specific month
+function toggleEmiSkip(emiId){
+  if(!D.emiSkip)D.emiSkip={};
+  const key=emiId+'_'+curM;
+  D.emiSkip[key]=!D.emiSkip[key];
+  sv();renderAll();
+  showToast(D.emiSkip[key]?'EMI hidden for '+fmtM(curM):'EMI shown for '+fmtM(curM),'ok');
+}
+
+// Mark EMI as inactive from current month onwards
+function markEmiInactive(emiId){
+  const e=D.emis.find(x=>x.id===emiId);if(!e)return;
+  if(e.inactive){
+    delete e.inactive; delete e.inactiveFrom;
+    sv();renderAll();showToast('✅ EMI re-activated','ok');
+  } else {
+    e.inactive=true;e.inactiveFrom=curM;
+    sv();renderAll();showToast('EMI marked inactive from '+fmtM(curM),'ok');
+  }
+}
+
+// Mark bill as inactive from current month onwards
+function markBillInactive(billId){
+  const b=D.bills.find(x=>x.id===billId);if(!b)return;
+  if(b.inactive){
+    // Re-activate
+    delete b.inactive; delete b.inactiveFrom;
+    sv();renderAll();showToast('✅ Bill re-activated','ok');
+  } else {
+    b.inactive=true;b.inactiveFrom=curM;
+    sv();renderAll();showToast('Bill marked inactive from '+fmtM(curM),'ok');
+  }
+}
+
+function openEditEmiAmt(emiId, currentAmt){
+  const amt=prompt('Edit EMI amount for '+fmtM(curM)+':\n(Regular: ₹'+Math.round(currentAmt)+')', Math.round(currentAmt));
+  if(amt===null)return;
+  const n=Number(amt);
+  if(!n||n<=0)return showToast('⚠️ Enter a valid amount','err');
+  if(!D.emiAmounts)D.emiAmounts={};
+  D.emiAmounts['emiamt_'+emiId+'_'+curM]=n;
+  sv();renderAll();
+  showToast('✅ EMI amount set to ₹'+n.toLocaleString('en-IN')+' for '+fmtM(curM),'ok');
+}
+
+function openEditBillAmt(billId, currentAmt){
+  const amt=prompt('Edit amount for '+fmtM(curM)+':\n(Current: ₹'+Math.round(currentAmt)+')', Math.round(currentAmt));
+  if(amt===null)return; // cancelled
+  const n=Number(amt);
+  if(!n||n<=0)return showToast('⚠️ Enter a valid amount','err');
+  setBillAmount(billId,curM,n);
+  showToast('✅ Amount updated to ₹'+n.toLocaleString('en-IN')+' for '+fmtM(curM),'ok');
+}
+
 function saveBillAmt(billId){
   const inp=document.getElementById('bamt_'+billId);
   if(!inp)return;
   const amt=Number(inp.value);
   if(!amt||amt<=0)return showToast('⚠️ Enter a valid amount','err');
   setBillAmount(billId,curM,amt);
-  showToast('✅ Bill amount set for '+curM,'ok');
+  showToast('✅ Bill amount set for '+fmtM(curM),'ok');
 }
 
 function setBillAmount(billId,m,amt){
@@ -1468,17 +1636,25 @@ function setBillAmount(billId,m,amt){
 /* ── COMPUTE MONTH ── */
 function cmp(m){
   const aEmis=D.emis.filter(e=>{
+    if(e.preclosed) return false;
+    if(e.inactive&&e.inactiveFrom&&m>=e.inactiveFrom) return false; // inactive from that month
+    if(D.emiSkip&&D.emiSkip[e.id+'_'+m]) return false; // skipped for this month
     const[sy,sm]=e.startMonth.split('-').map(Number);
     const ed=new Date(sy,sm-1+Number(e.durationMonths));
     return e.startMonth<=m&&mk(ed)>m;
   });
-  const emiTotal=aEmis.reduce((s,e)=>s+Number(e.amount),0);
+  const getEmiAmt=(e,m)=>{
+    const k='emiamt_'+e.id+'_'+m;
+    return D.emiAmounts&&D.emiAmounts[k]!==undefined?D.emiAmounts[k]:Number(e.amount);
+  };
+  const emiTotal=aEmis.reduce((s,e)=>s+getEmiAmt(e,m),0);
 
   // For balance: CC EMIs never deduct from cash balance (they're on CC bill)
   // Non-CC EMIs: deduct only when paid, and only if paid via cash (not CC)
-  const paidEmiCash=aEmis.filter(e=>!e.isCCEmi&&isPaid(e.id,m)&&!D.payments[e.id+'_'+m+'_cc']).reduce((s,e)=>s+Number(e.amount),0);
-  const paidEmiCC=aEmis.filter(e=>isPaid(e.id,m)&&D.payments[e.id+'_'+m+'_cc']).reduce((s,e)=>s+Number(e.amount),0);
-  // CC EMIs always go to CC bill total
+  const paidEmiCash=aEmis.filter(e=>!e.isCCEmi&&isPaid(e.id,m)&&!D.payments[e.id+'_'+m+'_cc']).reduce((s,e)=>s+getEmiAmt(e,m),0);
+  // paidEmiCC: non-CC EMIs that were manually paid via CC (CC EMIs excluded — they're already in ccEmiTotal)
+  const paidEmiCC=aEmis.filter(e=>!e.isCCEmi&&isPaid(e.id,m)&&D.payments[e.id+'_'+m+'_cc']).reduce((s,e)=>s+Number(e.amount),0);
+  // CC EMIs always go to CC bill total (counted once here, not again in paidEmiCC)
   const ccEmiTotal=aEmis.filter(e=>e.isCCEmi).reduce((s,e)=>s+Number(e.amount),0);
 
   const aBills=getBills(m);
@@ -1486,6 +1662,13 @@ function cmp(m){
   const paidBillCash=aBills.filter(b=>isPaid(b.id,m)&&!D.payments[b.id+'_'+m+'_cc']).reduce((s,b)=>s+Number(b.amount),0);
   const paidBillCC=aBills.filter(b=>isPaid(b.id,m)&&D.payments[b.id+'_'+m+'_cc']).reduce((s,b)=>s+Number(b.amount),0);
   const paidBillTotal=paidBillCash+paidBillCC;
+  // CC bill amount already includes CC EMI charges. For savings, only count the net portion
+  // (CC bill minus CC EMIs already deducted via emiTotal), so we don't double-count.
+  const ccBillTotal=aBills.filter(b=>b.type==='creditcard').reduce((s,b)=>s+Number(b.amount),0);
+  const nonCCBillTotal=billTotal-ccBillTotal;
+  // Net CC bill for savings = CC bill amount minus CC EMIs (already in emiTotal). Floor at 0.
+  const ccBillNetForSavings=Math.max(0, ccBillTotal - ccEmiTotal);
+  const billTotalForSavings=nonCCBillTotal+ccBillNetForSavings;
 
   const txns=D.transactions.filter(t=>t.date.startsWith(m));
   const savTxns=txns.filter(t=>t.inSavings!==false);
@@ -1503,14 +1686,14 @@ function cmp(m){
   const lentSavAmt=D.lent.filter(l=>l.inSavings!==false&&l.date.startsWith(m)).reduce((s,l)=>s+Number(l.amount),0);
   const borSavAmt=D.borrowed.filter(b=>b.inSavings!==false&&b.date.startsWith(m)).reduce((s,b)=>s+Number(b.amount),0);
 
-  // Net savings = income - all EMIs (CC EMIs are still an obligation) - bills - direct expenses
-  const savings=income+borSavAmt-directDebits-emiTotal-billTotal-lentSavAmt;
+  // Net savings = income - all EMIs - bills (CC bill uses net amount to avoid double-counting CC EMIs) - direct expenses
+  const savings=income+borSavAmt-directDebits-emiTotal-billTotalForSavings-lentSavAmt;
   // Available cash = salary + credits - CASH-paid EMIs (not CC) - CASH-paid bills - direct debits
   const available=D.salary+credits+borSavAmt-paidEmiCash-paidBillCash-directDebits-lentSavAmt;
   // Next CC bill = txn CC spend + CC-paid EMIs + CC-paid bills + CC EMIs (unpaid, auto on CC)
   const ccNextBill=txnCCSpend+paidEmiCC+paidBillCC+ccEmiTotal;
 
-  return {aEmis,emiTotal,paidEmiCash,paidEmiCC,ccEmiTotal,aBills,billTotal,paidBillTotal,
+  return {aEmis,emiTotal,paidEmiCash,paidEmiCC,ccEmiTotal,aBills,billTotal,billTotalForSavings,ccBillNetForSavings,paidBillTotal,
     txns,credits,directDebits,ccSpend,personal,home,hSubs,income,savings,available,
     lentSavAmt,borSavAmt,ccNextBill};
 }
@@ -1524,7 +1707,7 @@ function computeTotalBal(){
   const pendingBor=D.borrowed.filter(b=>!b.returned).reduce((s,b)=>s+Number(b.amount),0);
   // EMI remaining debt = sum of remaining months × monthly amount
   const now2=new Date();const nowM=now2.getFullYear()+'-'+String(now2.getMonth()+1).padStart(2,'0');
-  const emiDebt=D.emis.filter(e=>!e.isCCEmi).reduce((s,e)=>{
+  const emiDebt=D.emis.filter(e=>!e.isCCEmi&&!e.preclosed).reduce((s,e)=>{
     const[sy,sm]=e.startMonth.split('-').map(Number);
     const totalM=Number(e.durationMonths);
     const endDate=new Date(sy,sm-1+totalM);
@@ -1550,7 +1733,8 @@ function rDash(){
   sv.textContent=R(cd.savings); sv.style.color=cd.savings>=0?'var(--g2)':'var(--r2)';
   document.getElementById('hInc').textContent=Rf(cd.income);
   document.getElementById('hEmi').textContent=Rf(cd.emiTotal);
-  document.getElementById('hBill').textContent=Rf(cd.billTotal);
+  // Show net bill deduction (CC bill minus CC EMIs already counted) so it matches savings calc
+  document.getElementById('hBill').textContent=Rf(cd.billTotalForSavings);
   document.getElementById('hSpend').textContent=Rf(cd.directDebits);
   // Avail
   const av=document.getElementById('availAmt');
@@ -1592,6 +1776,7 @@ function rDash(){
     const p=isPaid(b.id,curM);
     const paidViaCC=p&&D.payments[b.id+'_'+curM+'_cc'];
     const needsAmt=b.recur!=='once'&&b.amount===0&&!p;
+    const isVariable=b.recur!=='once'; // all recurring bills are variable
     return `<div class="icard${p?' dim':''}${needsAmt?' amt-needed':''}">
       <div style="display:flex;align-items:center;gap:11px;">
         <div class="ib" style="background:rgba(236,72,153,.1);font-size:20px;">${bIco(b.type)}</div>
@@ -1599,17 +1784,21 @@ function rDash(){
           <div style="font-size:13px;font-weight:700;">${b.name}${b.bankName?' <span style="font-size:10px;color:var(--t3);">'+b.bankName+'</span>':''}</div>
           <div style="font-size:10px;color:var(--t3);">Due ${b.due}${sfx(b.due)} · ${b.recur} <span class="tag ${p?'tg':'ta'}">${p?'PAID':'DUE'}</span>${paidViaCC?` <span class="tag tpk">CC</span>`:''}</div>
           ${needsAmt?`<div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
-            <input type="number" id="bamt_${b.id}" placeholder="Enter amount" style="flex:1;background:var(--bg3);border:1px solid var(--c);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:13px;font-weight:700;font-family:inherit;" onkeydown="if(event.key==='Enter')saveBillAmt('${b.id}')">
+            <input type="number" id="bamt_${b.id}" placeholder="Enter amount for ${fmtM(curM)}" style="flex:1;background:var(--bg3);border:1px solid var(--c);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:13px;font-weight:700;font-family:inherit;" onkeydown="if(event.key==='Enter')saveBillAmt('${b.id}')">
             <button onclick="saveBillAmt('${b.id}')" style="background:var(--c);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">✓ Set</button>
           </div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
           ${needsAmt
             ?`<div style="font-size:12px;font-weight:700;color:var(--a2);">Enter ₹</div>`
-            :`<div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--r2)'};">${R(b.amount)}</div>`
+            :`<div style="display:flex;align-items:center;gap:5px;">
+                <div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--r2)'};">${R(b.amount)}</div>
+                ${isVariable&&!p?`<button class="del-btn" onclick="openEditBillAmt('${b.id}','${b.amount}')" title="Edit amount for ${fmtM(curM)}" style="border-color:rgba(13,217,245,.4);background:rgba(13,217,245,.1);font-size:11px;">✏️</button>`:''}
+              </div>`
           }
           <div style="display:flex;gap:5px;">
             <button class="ptgl${p?' on':''}${needsAmt?' disabled':''}" onclick="${needsAmt?'showToast("⚠️ Enter amount first","err")':"togglePaid('bill','"+ b.id +"')"}">${p?'✓':''}</button>
+            ${!p?`<button class="del-btn" onclick="toggleBillSkip('${b.id}')" title="Hide bill for this month" style="border-color:rgba(255,165,0,.4);background:rgba(255,165,0,.1);font-size:11px;">⏸</button>`:''}
             <button class="del-btn" onclick="confirmDel('bill','${b.id}','${b.name}')" title="Delete">🗑</button>
           </div>
         </div>
@@ -1623,17 +1812,31 @@ function rDash(){
   else el.innerHTML=cd.aEmis.map(e=>{
     const p=isPaid(e.id,curM);
     const paidViaCC=p&&D.payments[e.id+'_'+curM+'_cc'];
+    const emiAmtKey='emiamt_'+e.id+'_'+curM;
+    const monthAmt=D.emiAmounts&&D.emiAmounts[emiAmtKey]!==undefined?D.emiAmounts[emiAmtKey]:Number(e.amount);
+    const isOverride=D.emiAmounts&&D.emiAmounts[emiAmtKey]!==undefined;
+    const[sy,sm]=e.startMonth.split('-').map(Number);
+    const[cy,cm]=curM.split('-').map(Number);
+    const instNo=Math.max(1,(cy*12+cm)-(sy*12+sm)+1);
+    const remaining=Math.max(0,Number(e.durationMonths)-instNo+1);
     return `<div class="icard${p?' dim':''}${e.isCCEmi?' cc-card':''}">
       <div style="display:flex;align-items:center;gap:11px;">
         <div class="ib" style="background:var(--ag);font-size:20px;">${e.isCCEmi?'💳':'🏦'}</div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;">${e.name}${e.bank?' <span style="font-size:10px;color:var(--t3);">'+e.bank+'</span>':''}</div>
-          <div style="font-size:10px;color:var(--t3);">Due ${e.due}${sfx(e.due)} · ${e.durationMonths}M ${e.isCCEmi?'<span class="tag tpk">CC EMI</span>':''} <span class="tag ${p?'tg':'ta'}">${p?'PAID':'DUE'}</span>${paidViaCC&&!e.isCCEmi?` <span class="tag tpk">via CC</span>`:''}</div>
+          <div style="font-size:10px;color:var(--t3);">Due ${e.due}${sfx(e.due)} · <span style="color:var(--c2);font-weight:700;">${instNo}${sfx(instNo)} of ${e.durationMonths}</span> · <span style="color:var(--a2);font-weight:700;">${remaining} left</span> ${e.isCCEmi?'<span class="tag tpk">CC EMI</span>':''} <span class="tag ${p?'tg':'ta'}">${p?'PAID':'DUE'}</span>${paidViaCC&&!e.isCCEmi?` <span class="tag tpk">via CC</span>`:''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-          <div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--a2)'};">${R(e.amount)}</div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div>
+              <div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--a2)'};">${R(monthAmt)}</div>
+              ${isOverride?`<div style="font-size:9px;color:var(--c2);text-align:right;">edited</div>`:''}
+            </div>
+            ${!p?`<button class="del-btn" onclick="openEditEmiAmt('${e.id}','${monthAmt}')" title="Edit amount for ${fmtM(curM)}" style="border-color:rgba(13,217,245,.4);background:rgba(13,217,245,.1);font-size:11px;">✏️</button>`:''}
+          </div>
           <div style="display:flex;gap:5px;">
             <button class="ptgl${p?' on':''}" onclick="togglePaid('emi','${e.id}')">${p?'✓':''}</button>
+            ${!p?`<button class="del-btn" onclick="toggleEmiSkip('${e.id}')" title="Hide EMI for this month" style="border-color:rgba(255,165,0,.4);background:rgba(255,165,0,.1);font-size:11px;">⏸</button>`:''}
             <button class="del-btn" onclick="confirmDel('emi','${e.id}','${e.name}')" title="Delete">🗑</button>
           </div>
         </div>
@@ -1713,29 +1916,84 @@ function confirmPayMethod(method){
 function setBF(f,el){billF=f;document.querySelectorAll('#bPills .pill').forEach(p=>p.classList.remove('on'));el.classList.add('on');rBills();}
 function rBills(){
   const el=document.getElementById('billList');
-  let bills=D.bills; if(billF!=='all')bills=bills.filter(b=>b.type===billF);
-  if(!bills.length){el.innerHTML=`<div class="addcard" onclick="openBillM()">＋ Add first bill</div>`;return;}
+  let bills=getBills(curM);
+  if(billF!=='all')bills=bills.filter(b=>b.type===billF);
+  if(!D.bills.length){el.innerHTML=`<div class="addcard" onclick="openBillM()">＋ Add first bill</div>`;return;}
+  // Hide inactive banner (we show inline now)
+  const banner=document.getElementById('inactiveBillsBanner');
+  if(banner)banner.style.display='none';
+  const inactiveBills=D.bills.filter(b=>b.inactive);
+  let html='';
+  if(!bills.length){
+    html=`<div style="text-align:center;color:var(--t3);margin-top:20px;font-size:13px;">No bills this month.<br><span style="font-size:11px;">Tap ⚡ Quick to enable existing bills</span></div>`;
+  } else {
   el.innerHTML=bills.map(b=>{
     const p=isPaid(b.id,curM);
     const paidViaCC=p&&D.payments[b.id+'_'+curM+'_cc'];
-    return `<div class="icard${p?' dim':''}">
+    const needsAmt=b.recur!=='once'&&b.amount===0&&!p;
+    const isVariable=b.recur!=='once';
+    const key='billamt_'+b.id+'_'+curM;
+    const isOverride=D.billAmounts&&D.billAmounts[key]!==undefined;
+    return `<div class="icard${p?' dim':''}${needsAmt?' amt-needed':''}">
       <div style="display:flex;align-items:center;gap:11px;">
         <div class="ib" style="background:rgba(236,72,153,.1);font-size:20px;">${bIco(b.type)}</div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;">${b.name}</div>
           ${b.bankName?`<div style="font-size:10px;color:var(--t3);">${b.bankName}</div>`:''}
-          <div style="font-size:10px;color:var(--t3);margin-top:2px;">Due ${b.due}${sfx(b.due)} · <span class="tag tp">${b.recur}</span>${paidViaCC?` <span class="tag tpk">via CC</span>`:''}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px;">Due ${b.due}${sfx(b.due)} · <span class="tag tp">${b.recur}</span>${paidViaCC?` <span class="tag tpk">via CC</span>`:''}${isOverride&&!needsAmt?` <span style="font-size:9px;color:var(--c2);">✏️ edited</span>`:''}</div>
+          ${needsAmt?`<div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
+            <input type="number" id="bamt2_${b.id}" placeholder="Enter amount for ${fmtM(curM)}" style="flex:1;background:var(--bg3);border:1px solid var(--c);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:13px;font-weight:700;font-family:inherit;" onkeydown="if(event.key==='Enter')saveBillAmt2('${b.id}')">
+            <button onclick="saveBillAmt2('${b.id}')" style="background:var(--c);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">✓ Set</button>
+          </div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-          <div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--r2)'};">${R(b.amount)}</div>
+          ${needsAmt
+            ?`<div style="font-size:12px;font-weight:700;color:var(--a2);">Enter ₹</div>`
+            :`<div style="display:flex;align-items:center;gap:5px;">
+                <div style="font-size:15px;font-weight:800;color:${p?'var(--t3)':'var(--r2)'};">${R(b.amount)}</div>
+                ${isVariable&&!p?`<button class="del-btn" onclick="openEditBillAmt('${b.id}','${b.amount}')" title="Edit amount for ${fmtM(curM)}" style="border-color:rgba(13,217,245,.4);background:rgba(13,217,245,.1);font-size:11px;">✏️</button>`:''}
+              </div>`
+          }
           <div style="display:flex;gap:5px;align-items:center;">
-            <button class="ptgl${p?' on':''}" onclick="togglePaid('bill','${b.id}')">${p?'✓':''}</button>
+            <button class="ptgl${p?' on':''}${needsAmt?' disabled':''}" onclick="${needsAmt?'showToast("⚠️ Enter amount first","err")':"togglePaid('bill','"+ b.id +"')"}">${p?'✓':''}</button>
             <button class="del-btn" onclick="confirmDel('bill','${b.id}','${b.name}')" title="Delete">🗑</button>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
+  }
+  // Append inactive bills as collapsible at bottom
+  if(inactiveBills.length){
+    const filtInactive=billF==='all'?inactiveBills:inactiveBills.filter(b=>b.type===billF);
+    if(filtInactive.length){
+      html+=`<div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:var(--bg3);border-radius:10px;" onclick="var p=document.getElementById('inactiveDropdown');var c=document.getElementById('inactiveChev');var open=p.style.display!=='none';p.style.display=open?'none':'block';c.style.transform=open?'':'rotate(180deg)';">
+          <span style="font-size:11px;font-weight:700;color:var(--t3);">⏸ Inactive Bills (${filtInactive.length})</span>
+          <span id="inactiveChev" style="color:var(--t3);font-size:12px;transition:transform .25s;">▼</span>
+        </div>
+        <div id="inactiveDropdown" style="display:none;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+          ${filtInactive.map(b=>`<div style="background:var(--bg2);border:1px dashed var(--b2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:0.7;">
+            <div style="font-size:18px;">${bIco(b.type)}</div>
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:700;color:var(--t1);">${b.name}</div>
+              <div style="font-size:10px;color:var(--t3);">Inactive from ${fmtM(b.inactiveFrom||curM)} · ${b.recur}</div>
+            </div>
+            <button onclick="reactivateBill('${b.id}')" style="background:rgba(18,217,138,.12);border:1px solid rgba(18,217,138,.4);color:var(--g2);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ Activate</button>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+function saveBillAmt2(billId){
+  const inp=document.getElementById('bamt2_'+billId);
+  if(!inp)return;
+  const amt=Number(inp.value);
+  if(!amt||amt<=0)return showToast('⚠️ Enter a valid amount','err');
+  setBillAmount(billId,curM,amt);
+  showToast('✅ Bill amount set for '+fmtM(curM),'ok');
 }
 
 /* ── EMIS ── */
@@ -1745,9 +2003,16 @@ function rEmis(){
   el.innerHTML=D.emis.map(e=>{
     const[sy,sm]=e.startMonth.split('-').map(Number);
     const ed=new Date(sy,sm-1+Number(e.durationMonths));
-    const act=e.startMonth<=curM&&mk(ed)>curM,p=isPaid(e.id,curM);
+    const act=!e.preclosed&&e.startMonth<=curM&&mk(ed)>curM,p=isPaid(e.id,curM);
     const paidViaCC=p&&D.payments[e.id+'_'+curM+'_cc'];
     const ccNote=e.isCCEmi?'<span class="tag tpk">CC EMI</span>':paidViaCC?'<span class="tag tpk">paid via CC</span>':'';
+    // Installment calculation
+    const[cy,cm]=curM.split('-').map(Number);
+    const instNo=Math.max(1,(cy*12+cm)-(sy*12+sm)+1);
+    const totalInst=Number(e.durationMonths);
+    const remaining=Math.max(0,totalInst-instNo+1);
+    const paidInst=Math.min(instNo-1,totalInst);
+    const pct=Math.round((paidInst/totalInst)*100);
     return `<div class="icard${e.isCCEmi?' cc-card':''}" style="border-left:3px solid ${act?'var(--c)':'var(--b1)'};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="flex:1;padding-right:9px;">
@@ -1757,12 +2022,33 @@ function rEmis(){
             ${ccNote}
           </div>
           ${e.bank?`<div style="font-size:10px;color:var(--t3);">🏦 ${e.bank}</div>`:''}
-          <div style="font-size:10px;color:var(--t3);">Due ${e.due}${sfx(e.due)} · ${e.durationMonths}m · Until ${MF[ed.getMonth()].slice(0,3)} ${ed.getFullYear()}</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:2px;">Total: ${R(e.amount*e.durationMonths)}</div>
+          <div style="font-size:10px;color:var(--t3);">Due ${e.due}${sfx(e.due)} · Until ${MF[ed.getMonth()].slice(0,3)} ${ed.getFullYear()}</div>
+          <!-- Installment progress -->
+          <div style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:11px;font-weight:800;color:var(--c2);">${instNo}${sfx(instNo)} instalment of ${totalInst}</span>
+              <span style="font-size:11px;font-weight:700;color:${remaining<=3?'var(--g2)':'var(--a2)'};">${remaining} pending</span>
+            </div>
+            <div style="background:var(--bg3);border-radius:6px;height:5px;overflow:hidden;">
+              <div style="background:linear-gradient(90deg,var(--c),var(--p));height:100%;width:${pct}%;border-radius:6px;transition:width .3s;"></div>
+            </div>
+            <div style="font-size:9px;color:var(--t3);margin-top:3px;">${paidInst} paid · ${R(e.amount*paidInst)} cleared · ${R(e.amount*remaining)} remaining</div>
+          </div>
           ${act?`<div style="display:flex;align-items:center;gap:7px;margin-top:8px;">
             <button class="ptgl${p?' on':''}" onclick="togglePaid('emi','${e.id}')">${p?'✓':''}</button>
             <span style="font-size:12px;color:${p?'var(--g2)':'var(--t3)'};">${p?'✓ Paid'+(e.isCCEmi?' via CC (auto)':paidViaCC?' via CC':' (cash)'):'Tap to mark paid'}</span>
           </div>`:``}
+          ${act?`<div style="display:flex;gap:6px;margin-top:8px;">
+            <button onclick="openPrepayM('${e.id}')" style="flex:1;background:rgba(251,176,42,.1);border:1px solid rgba(251,176,42,.4);color:var(--a2);border-radius:9px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">💰 Prepay</button>
+            <button onclick="openPreclosureM('${e.id}')" style="flex:1;background:rgba(18,217,138,.08);border:1px solid rgba(18,217,138,.3);color:var(--g2);border-radius:9px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✅ Preclose</button>
+          </div>`:''}
+          ${act?`<div style="display:flex;gap:6px;margin-top:6px;">
+            <button onclick="toggleEmiSkip('${e.id}')" style="flex:1;background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.3);color:var(--a2);border-radius:9px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">⏸ Skip ${fmtM(curM)}</button>
+            <button onclick="markEmiInactive('${e.id}')" style="flex:1;background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);color:var(--r2);border-radius:9px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🚫 Inactive</button>
+          </div>`:''}
+          ${e.inactive?`<div style="margin-top:5px;"><span class="tag tr">INACTIVE from ${fmtM(e.inactiveFrom||curM)}</span> <button onclick="markEmiInactive('${e.id}')" style="background:rgba(18,217,138,.12);border:1px solid rgba(18,217,138,.4);color:var(--g2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">▶ Re-activate</button></div>`:''}
+          ${e.prepayments&&e.prepayments.length?`<div style="margin-top:6px;font-size:10px;color:var(--t3);">💰 ${e.prepayments.length} prepayment(s) · ${R(e.prepayments.reduce((s,p)=>s+p.amount,0))} extra paid</div>`:''}
+          ${e.preclosed?`<div style="margin-top:5px;"><span class="tag tgr">PRECLOSED ${e.preclosedOn||''}</span></div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;height:100%;gap:10px;">
           <div style="text-align:right;">
@@ -1774,6 +2060,26 @@ function rEmis(){
       </div>
     </div>`;
   }).join('');
+  // Append inactive EMIs as collapsible at bottom
+  const inactiveEmis=D.emis.filter(e=>e.inactive&&!e.preclosed);
+  if(inactiveEmis.length){
+    el.innerHTML+= `<div style="margin-top:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:var(--bg3);border-radius:10px;" onclick="var p=document.getElementById('inactiveEmiDrop');var c=document.getElementById('inactiveEmiChev');var open=p.style.display!=='none';p.style.display=open?'none':'flex';c.style.transform=open?'':'rotate(180deg)';">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);">🚫 Inactive EMIs (${inactiveEmis.length})</span>
+        <span id="inactiveEmiChev" style="color:var(--t3);font-size:12px;transition:transform .25s;">▼</span>
+      </div>
+      <div id="inactiveEmiDrop" style="display:none;flex-direction:column;gap:6px;margin-top:6px;">
+        ${inactiveEmis.map(e=>`<div style="background:var(--bg2);border:1px dashed var(--b2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:0.7;">
+          <div style="font-size:22px;">🏦</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:700;color:var(--t1);">${e.name}${e.bank?' · '+e.bank:''}</div>
+            <div style="font-size:10px;color:var(--t3);">Inactive from ${fmtM(e.inactiveFrom||curM)} · ${R(e.amount)}/mo</div>
+          </div>
+          <button onclick="markEmiInactive('${e.id}')" style="background:rgba(18,217,138,.12);border:1px solid rgba(18,217,138,.4);color:var(--g2);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ Activate</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
 }
 
 /* ── TRANSACTIONS ── */
@@ -1983,13 +2289,20 @@ function rProperty(){
     const paidInterest=pays.reduce((s,pay)=>s+Number(pay.interest||0),0);
     const totalCost=Number(p.totalCost||0);
     const pct=totalCost>0?Math.min(100,Math.round(paidPrincipal/totalCost*100)):0;
+    const isFullyPaid=pct>=100||p.fullyPaid;
     const propId='prop_'+p.id;
-    return `<div class="icard" style="border-left:3px solid var(--g);margin-bottom:10px;">
+    // Auto-mark as fully paid if pct reaches 100
+    if(pct>=100&&!p.fullyPaid){p.fullyPaid=true;p.fullyPaidOn=pays.length?[...pays].sort((a,b)=>b.date.localeCompare(a.date))[0].date:td();sv();}
+    return `<div class="icard" style="border-left:3px solid ${isFullyPaid?'var(--g)':'var(--a)'};margin-bottom:10px;${isFullyPaid?'opacity:0.85':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
         <div style="flex:1;">
-          <div style="font-size:15px;font-weight:800;">🏘️ ${p.name}</div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <div style="font-size:15px;font-weight:800;">🏘️ ${p.name}</div>
+            ${isFullyPaid?'<span class="tag tg" style="font-size:9px;">✅ FULLY PAID</span>':''}
+          </div>
           <div style="font-size:10px;color:var(--t3);margin-top:2px;">${p.location||''}${p.area?' · '+p.area:''}</div>
           <div style="font-size:10px;color:var(--t3);margin-top:1px;">Agreement: ${R(totalCost)}${p.purchaseDate?' · '+p.purchaseDate:''}</div>
+          ${isFullyPaid&&p.fullyPaidOn?`<div style="font-size:10px;color:var(--g2);margin-top:2px;font-weight:700;">✅ Completed: ${p.fullyPaidOn}</div>`:''}
         </div>
         <div style="text-align:right;">
           <div style="font-size:14px;font-weight:800;color:var(--g2);">${R(Number(p.currentValue||totalCost))}</div>
@@ -1997,14 +2310,14 @@ function rProperty(){
         </div>
       </div>
       <!-- Progress bar -->
-      <div style="background:var(--bg3);border-radius:6px;height:6px;margin-bottom:6px;overflow:hidden;">
-        <div style="background:var(--g);height:100%;width:${pct}%;border-radius:6px;transition:width .3s;"></div>
+      <div style="background:var(--bg3);border-radius:6px;height:8px;margin-bottom:6px;overflow:hidden;">
+        <div style="background:${isFullyPaid?'var(--g)':'linear-gradient(90deg,var(--a),var(--g)'};height:100%;width:${pct}%;border-radius:6px;transition:width .3s;"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:10px;">
-        <span style="color:var(--g2);font-weight:700;">${pct}% principal paid</span>
+        <span style="color:${isFullyPaid?'var(--g2)':'var(--a2)'};font-weight:700;">${pct}% principal paid</span>
         <span>${R(paidPrincipal)} of ${R(totalCost)}</span>
       </div>
-      <!-- Stats row -->
+      <!-- Summary row -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
         <div style="background:var(--bg3);border-radius:8px;padding:7px;text-align:center;">
           <div style="font-size:12px;font-weight:800;color:var(--c2);">${R(paidTotal)}</div>
@@ -2019,9 +2332,9 @@ function rProperty(){
           <div style="font-size:9px;color:var(--t3);">Interest</div>
         </div>
       </div>
-      <!-- Action buttons -->
+      <!-- Action buttons — hide add payment if fully paid -->
       <div style="display:flex;gap:6px;margin-bottom:${pays.length?'10px':'0'};align-items:center;">
-        <button class="btn btn-g btn-sm" style="flex:1;font-size:11px;" onclick="openAddPayment('${p.id}')">+ Payment</button>
+        ${!isFullyPaid?`<button class="btn btn-g btn-sm" style="flex:1;font-size:11px;" onclick="openAddPayment('${p.id}')">+ Payment</button>`:`<button class="btn btn-ol btn-sm" style="flex:1;font-size:11px;" onclick="openAddPayment('${p.id}')">+ Add Payment</button>`}
         <button class="del-btn" onclick="editProperty('${p.id}')" title="Edit" style="border-color:rgba(13,217,245,.4);background:rgba(13,217,245,.1);">✏️</button>
         <button class="del-btn" onclick="confirmDel('property','${p.id}','${p.name}')">🗑</button>
       </div>
@@ -3005,7 +3318,10 @@ function applyImport(parsed, silent=false){
     lent:parsed.lent||[],
     borrowed:parsed.borrowed||[],
     payments:parsed.payments||{},
+    emiAmounts:parsed.emiAmounts||{},
     billAmounts:parsed.billAmounts||{},
+    billSkip:parsed.billSkip||{},
+    emiSkip:parsed.emiSkip||{},
     email:parsed.email||D.email||'',
     bankBal:parsed.bankBal||0,
     cashBal:parsed.cashBal||0,
@@ -3054,7 +3370,18 @@ function saveTotalBal(){
 }
 
 /* ── TRANSACTION ── */
-function openTxnM(){sTT('credit');sTC('personal');document.getElementById('tDesc').value='';document.getElementById('tAmt').value='';document.getElementById('tDt').value=td();document.getElementById('ccPay').checked=false;document.getElementById('txnInSavings').checked=true;document.getElementById('ccPayRow').style.display='none';om('txnM');}
+function openTxnM(){
+  sTT('credit');sTC('personal');
+  document.getElementById('tDesc').value='';
+  document.getElementById('tAmt').value='';
+  // Default date: if curM is current month use today, else use 1st of curM
+  const todayM=mk(new Date());
+  document.getElementById('tDt').value=curM===todayM?td():curM+'-01';
+  document.getElementById('ccPay').checked=false;
+  document.getElementById('txnInSavings').checked=true;
+  document.getElementById('ccPayRow').style.display='none';
+  om('txnM');
+}
 function sTT(t){tType=t;document.getElementById('tTC').className='tgl'+(t==='credit'?' on-c':'');document.getElementById('tTD').className='tgl'+(t==='debit'?' on-d':'');document.getElementById('catRow').style.display=t==='debit'?'block':'none';document.getElementById('ccPayRow').style.display=t==='debit'?'flex':'none';}
 function sTC(c){tCat=c;['cP','cH','cO','cB'].forEach(x=>{const el=document.getElementById(x);if(el)el.className='tgl';});const m={personal:'cP',home:'cH',other:'cO',bor:'cB'};if(m[c])document.getElementById(m[c]).className='tgl on-s';document.getElementById('hSubRow').style.display=c==='home'?'block':'none';const bsr=document.getElementById('borSelRow');if(bsr)bsr.style.display=c==='bor'?'block':'none';if(c==='bor')popBorSel();}
 function popBorSel(){const sel=document.getElementById('borSel');if(!sel)return;sel.innerHTML='<option value="">— Create new borrower entry —</option>';D.borrowed.filter(b=>!b.returned).forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.name+' ('+R(b.amount)+' owed)';sel.appendChild(o);});}
@@ -3501,6 +3828,207 @@ function genFullReport(){
   if(!w){showToast('⚠️ Allow popups to get PDF','err');return;}
   w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};
   showToast('📊 Full report opened — Save as PDF','ok');
+}
+
+/* ── PREPAY / PRECLOSURE ── */
+let _prepayEmiId=null;
+
+function openPrepayM(emiId){
+  _prepayEmiId=emiId;
+  const e=D.emis.find(x=>x.id===emiId);if(!e)return;
+  document.getElementById('prepayEmiName').textContent=e.name+(e.bank?' · '+e.bank:'');
+  document.getElementById('prepayAmt').value='';
+  document.getElementById('prepayDate').value=td();
+  document.getElementById('prepayShorten').checked=true;
+  document.getElementById('prepayCalc').style.display='none';
+  // Show calc on input
+  document.getElementById('prepayAmt').oninput=()=>showPrepayCalc(emiId);
+  document.querySelectorAll('input[name="prepayType"]').forEach(r=>r.onchange=()=>showPrepayCalc(emiId));
+  om('prepayM');
+}
+
+function showPrepayCalc(emiId){
+  const e=D.emis.find(x=>x.id===emiId);if(!e)return;
+  const extra=Number(document.getElementById('prepayAmt').value)||0;
+  if(!extra){document.getElementById('prepayCalc').style.display='none';return;}
+  const type=document.querySelector('input[name="prepayType"]:checked').value;
+  const[sy,sm]=e.startMonth.split('-').map(Number);
+  const[cy,cm]=curM.split('-').map(Number);
+  const elapsed=Math.max(0,(cy*12+cm)-(sy*12+sm));
+  const remaining=Math.max(0,Number(e.durationMonths)-elapsed);
+  const monthlyAmt=Number(e.amount);
+  let msg='';
+  if(type==='shorten'){
+    const monthsReduced=Math.floor(extra/monthlyAmt);
+    const newRemaining=Math.max(1,remaining-monthsReduced);
+    msg=`<b style="color:var(--g2);">Tenure reduces by ~${monthsReduced} month${monthsReduced>1?'s':''}</b><br>
+    Remaining: ${remaining} → <b style="color:var(--t1);">${newRemaining} months</b><br>
+    New end: approx ${getEndMonth(curM,newRemaining)}`;
+  } else {
+    const remainingPrincipal=Math.max(0,(remaining*monthlyAmt)-extra);
+    const newEmi=remaining>1?Math.round(remainingPrincipal/(remaining-1)):0;
+    msg=`<b style="color:var(--g2);">Monthly EMI reduces</b><br>
+    Current: ${R(monthlyAmt)} → <b style="color:var(--t1);">New: ${R(newEmi)}</b><br>
+    Remaining months stays: ${remaining}`;
+  }
+  const el=document.getElementById('prepayCalc');
+  el.innerHTML=msg; el.style.display='block';
+}
+
+function getEndMonth(fromM,months){
+  const[y,m]=fromM.split('-').map(Number);
+  const d=new Date(y,m-1+months);
+  return MS[d.getMonth()]+' '+d.getFullYear();
+}
+
+function savePrepay(){
+  const e=D.emis.find(x=>x.id===_prepayEmiId);if(!e)return;
+  const extra=Number(document.getElementById('prepayAmt').value);
+  const date=document.getElementById('prepayDate').value;
+  const type=document.querySelector('input[name="prepayType"]:checked').value;
+  if(!extra||extra<=0)return showToast('⚠️ Enter prepayment amount','err');
+  if(!date)return showToast('⚠️ Select date','err');
+
+  if(!e.prepayments)e.prepayments=[];
+  e.prepayments.push({id:uid(),amount:extra,date,type});
+
+  // Apply effect
+  const[sy,sm]=e.startMonth.split('-').map(Number);
+  const[cy,cm]=curM.split('-').map(Number);
+  const elapsed=Math.max(0,(cy*12+cm)-(sy*12+sm));
+  const remaining=Math.max(0,Number(e.durationMonths)-elapsed);
+  const monthlyAmt=Number(e.amount);
+
+  if(type==='shorten'){
+    const monthsReduced=Math.floor(extra/monthlyAmt);
+    const newDuration=Math.max(elapsed+1,Number(e.durationMonths)-monthsReduced);
+    e.durationMonths=newDuration;
+    showToast('✅ Tenure reduced by '+monthsReduced+' month(s)','ok');
+  } else {
+    const remainingPrincipal=Math.max(0,(remaining*monthlyAmt)-extra);
+    const newEmi=remaining>1?Math.round(remainingPrincipal/(remaining-1)):0;
+    e.amount=newEmi;
+    showToast('✅ EMI reduced to '+R(newEmi)+'/month','ok');
+  }
+
+  sv();cm('prepayM');rEmis();rDash();
+}
+
+function openPreclosureM(emiId){
+  _prepayEmiId=emiId;
+  const e=D.emis.find(x=>x.id===emiId);if(!e)return;
+  document.getElementById('preclosureEmiName').textContent=e.name+(e.bank?' · '+e.bank:'');
+  document.getElementById('preclosureAmt').value='';
+  document.getElementById('preclosureDate').value=td();
+  document.getElementById('preclosureNotes').value='';
+  om('preclosureM');
+}
+
+function savePreclosure(){
+  const e=D.emis.find(x=>x.id===_prepayEmiId);if(!e)return;
+  const amt=Number(document.getElementById('preclosureAmt').value);
+  const date=document.getElementById('preclosureDate').value;
+  const notes=document.getElementById('preclosureNotes').value.trim();
+  if(!amt||amt<=0)return showToast('⚠️ Enter preclosure amount','err');
+  if(!date)return showToast('⚠️ Select date','err');
+  e.preclosed=true;
+  e.preclosedOn=date;
+  e.preclosureAmt=amt;
+  e.preclosureNotes=notes;
+  // Mark current month as paid
+  D.payments[e.id+'_'+curM]=true;
+  sv();cm('preclosureM');rEmis();rDash();
+  showToast('✅ Loan marked as preclosed!','ok');
+}
+
+/* ── QUICK ADD BILL ── */
+let _showInactive=false;
+function openQuickAddBill(){
+  document.getElementById('quickBillMonth').textContent=fmtM(curM);
+  renderQuickBillList();
+  om('quickBillM');
+}
+
+function renderQuickBillList(){
+  if(!D.billSkip)D.billSkip={};
+  const activeBills=D.bills.filter(b=>b.recur!=='once'&&!b.inactive);
+  const inactiveBills=D.bills.filter(b=>b.inactive);
+  const qel=document.getElementById('quickBillList');
+  const iel=document.getElementById('inactiveBillList');
+
+  if(!activeBills.length){
+    qel.innerHTML='<div style="color:var(--t3);font-size:12px;text-align:center;padding:12px;">No recurring bills added yet. Tap + New to add one.</div>';
+  } else {
+    // Check which bills naturally appear this month (ignoring skip)
+    const naturallyThisMonth=(b)=>{
+      if(b.recur==='once') return b.billMonth===curM;
+      if(b.startMonth&&curM<b.startMonth) return false;
+      if(b.recur==='monthly') return true;
+      if(b.recur==='quarterly'){
+        const[by,bm]=b.startMonth.split('-').map(Number),[cy,cm]=curM.split('-').map(Number);
+        const diff=(cy*12+cm)-(by*12+bm);
+        return diff>=0&&diff%3===0;
+      }
+      if(b.recur==='yearly') return b.startMonth.split('-')[1]===curM.split('-')[1];
+      return false;
+    };
+    qel.innerHTML=activeBills.map(b=>{
+      const skipKey=b.id+'_'+curM;
+      const isSkipped=D.billSkip&&D.billSkip[skipKey];
+      const naturally=naturallyThisMonth(b);
+      const isInMonth=naturally&&!isSkipped;
+      const notDueThisMonth=!naturally;
+      return `<div style="background:var(--bg3);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px;${notDueThisMonth?'opacity:0.6':''}">
+        <div style="font-size:20px;">${bIco(b.type)}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:var(--t1);">${b.name}</div>
+          <div style="font-size:10px;color:var(--t3);">${b.recur} · Due ${b.due}${sfx(b.due)}${b.bankName?' · '+b.bankName:''}</div>
+          ${notDueThisMonth?`<div style="font-size:9px;color:var(--t3);margin-top:2px;">Not due this month (${b.recur})</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+          <span style="font-size:10px;font-weight:700;color:${isInMonth?'var(--g2)':notDueThisMonth?'var(--t3)':'var(--a2)'};">
+            ${isInMonth?'✅ Active':notDueThisMonth?'— Not due':'⏸ Skipped'}
+          </span>
+          ${!notDueThisMonth?`<button onclick="toggleBillSkipFromQuick('${b.id}')" style="background:${isInMonth?'rgba(255,77,106,.12)':'rgba(18,217,138,.12)'};border:1px solid ${isInMonth?'rgba(255,77,106,.4)':'rgba(18,217,138,.4)'};color:${isInMonth?'var(--r2)':'var(--g2)'};border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">
+            ${isInMonth?'Skip':'Enable'}
+          </button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if(!inactiveBills.length){
+    iel.innerHTML='<div style="color:var(--t3);font-size:11px;">No inactive bills.</div>';
+  } else {
+    iel.innerHTML=inactiveBills.map(b=>`<div style="background:var(--bg3);border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;opacity:0.7;">
+      <div style="font-size:18px;">${bIco(b.type)}</div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:700;color:var(--t1);">${b.name}</div>
+        <div style="font-size:10px;color:var(--t3);">Inactive from ${fmtM(b.inactiveFrom||curM)}</div>
+      </div>
+      <button onclick="reactivateBill('${b.id}')" style="background:rgba(18,217,138,.12);border:1px solid rgba(18,217,138,.4);color:var(--g2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">▶ Activate</button>
+    </div>`).join('');
+  }
+}
+
+function toggleBillSkipFromQuick(billId){
+  if(!D.billSkip)D.billSkip={};
+  const key=billId+'_'+curM;
+  D.billSkip[key]=!D.billSkip[key];
+  sv();renderAll();renderQuickBillList();
+}
+
+function reactivateBill(billId){
+  const b=D.bills.find(x=>x.id===billId);if(!b)return;
+  delete b.inactive;delete b.inactiveFrom;
+  sv();renderAll();renderQuickBillList();
+  showToast('✅ Bill re-activated!','ok');
+}
+
+function toggleShowInactive(){
+  _showInactive=!_showInactive;
+  document.getElementById('inactiveToggleBtn').textContent=_showInactive?'Hide inactive':'Show inactive';
+  rBills();
 }
 
 /* ── TAB NAV ── */
