@@ -10,7 +10,7 @@
 
 ## 📱 Live App
 
-👉 **[Open FinanceFlow PRO](https://YOUR_USERNAME.github.io/FinanceFlow)**
+👉 **[Open FinanceFlow PRO](https://balasantu.github.io/FinanceFlow)**
 
 Works on Android, iPhone, and PC — just open in Chrome.
 
