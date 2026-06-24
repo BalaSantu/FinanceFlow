@@ -10,7 +10,7 @@
 
 ## 📱 Live App
 
-👉 **[Open FinanceFlow PRO](https://balasantu.github.io/FinanceFlow)**
+👉 **[Open FinanceFlow PRO](https://YOUR_USERNAME.github.io/FinanceFlow)**
 
 Works on Android, iPhone, and PC — just open in Chrome.
 
@@ -21,14 +21,14 @@ Works on Android, iPhone, and PC — just open in Chrome.
 ### 🏠 Dashboard (Home)
 - Monthly Net Savings overview
 - Income, EMIs, Bills, Expenses summary
-- Available Cash Balance (after all deductions)
+- Available Cash Balance after all deductions
 - Credit Card usage tracker
 - Collapsible sections — Bills, EMIs, Credits & Debits, Total Balance
-- Only active bills & EMIs shown — skipped/inactive are hidden automatically
+- Only active bills & EMIs shown — skipped/inactive/preclosed hidden automatically
 
 ### 📋 Bills
 - Add recurring bills — monthly, quarterly, yearly, one-time
-- **Variable amounts** — enter fresh amount each month (₹0 by default for new months)
+- **Variable amounts** — enter fresh amount each month (₹0 default for new months)
 - **✏️ Edit amount** for any specific month without affecting others
 - Mark paid via **UPI/Bank** or **Credit Card**
 - **⏸ Skip** — hide a bill for one specific month only
@@ -38,22 +38,29 @@ Works on Android, iPhone, and PC — just open in Chrome.
 - ⚡ Quick manage panel — see all bills, toggle per month
 
 ### 🏦 EMIs
-- Track all active EMIs with installment number
-- **✏️ Edit amount** per month — for variable last EMI
-- **⏸ Skip** — hide EMI for one specific month
+- Track all active EMIs with instalment number and progress
+- **Accurate pending count** — based on actual payments made, updates instantly when marked paid
+- **✏️ Edit amount** per month — handles variable last EMI
+- **⏸ Skip** — hide EMI for one specific month only
 - **🚫 Inactive** — stop EMI from current month onwards
-- Inactive EMIs shown as collapsible dropdown
+- Inactive EMIs shown as collapsible dropdown — activate anytime
 - **💰 Prepayment** — extra payment with two options:
-  - Reduce tenure (fewer months, same EMI)
-  - Reduce EMI amount (same months, lower EMI)
-  - Live calculation shown before confirming
-- **✅ Preclosure** — mark loan as fully closed, removed from all calculations
+  - Reduce tenure (fewer months, same EMI) — with live calculation
+  - Reduce EMI amount (same months, lower EMI) — with live calculation
+- **✅ Preclosure** — mark loan as fully closed:
+  - Hidden from all months after preclosure date
+  - Previous months retain full paid history
+  - Shows **interest saved** by preclosing early
+  - Preclosure amount deducted from that month's savings & available balance
+- **💡 "If I preclose today?"** calculator on every active EMI:
+  - Shows what you'd pay if you continue vs typical savings range (5–15%)
+  - Enter bank's quoted amount in Preclose → see exact interest saved instantly
 - CC EMIs auto-marked as credit card payment
 - Remaining EMI balance deducted from Net Worth
 
 ### 💳 Transactions
 - Add income & expense transactions for any month
-- When viewing an old month, date defaults to that month automatically
+- When viewing old month, date defaults to that month automatically
 - Personal / Home / Borrowed categories
 - Paste bank SMS to auto-import transactions
 - Import UPI Lite / BHIM CSV
@@ -63,15 +70,14 @@ Works on Android, iPhone, and PC — just open in Chrome.
 - Track invested vs current value with P&L
 
 ### 💸 More — I Lent
-- **Grouped by person** — multiple loans to same person shown as one card
+- Grouped by person — multiple loans to same person shown as one card
 - Tap to expand individual entries
 - Mark collected, track overdue
 - Counts in Net Worth automatically
 
 ### 🤝 More — Borrowed
 - Track money you owe others
-- Mark returned with actual amount
-- Overdue alerts
+- Mark returned, overdue alerts
 
 ### 💫 More — Given / Help
 - Money given where return is not compulsory
@@ -80,26 +86,25 @@ Works on Android, iPhone, and PC — just open in Chrome.
 - Mark returned if they ever pay back
 
 ### 🙏 More — Donations
-- Track donations by recipient
+- Track donations by recipient with date and notes
 - Monthly and total donation summary
 
 ### 🏘️ More — Property
 - Add plots, flats, land with agreement cost & current value
-- Log **irregular payments** with Principal + Interest split
+- Log irregular payments with Principal + Interest split
 - Progress bar showing % of total cost paid
-- **Auto-marks as FULLY PAID** when principal reaches 100%
+- Auto-marks as **✅ FULLY PAID** when principal reaches 100%
 - Full payment history preserved even after completion
 - Property value shown in Net Worth
 
 ### 📅 More — Yearly View
 - Full year income, EMI, spend, savings summary
 - Month-by-month breakdown table
-- Export yearly PDF report
 
 ### 📄 PDF Reports — 3 Types
 - **Monthly Report** — income, EMIs, bills, expenses, transactions
 - **Yearly Report** — month-by-month annual summary
-- **Full Financial Report** — complete snapshot including Net Worth, Investments, Property, Lent, Borrowed, Given/Help, Donations, Active EMIs
+- **Full Financial Report** — Net Worth, Investments, Property, Lent, Borrowed, Given/Help, Donations, Active EMIs
 
 ### ☁️ Google Drive Sync
 - Real-time sync across all devices
@@ -108,7 +113,7 @@ Works on Android, iPhone, and PC — just open in Chrome.
 - One-time setup — sign in on each device, data loads automatically
 
 ### 📤 Manual Backup
-- Export data as `.json` file
+- Export data as `.json` file anytime
 - Import on any device
 - Previous `.json` files fully compatible with new versions
 
@@ -118,24 +123,35 @@ Works on Android, iPhone, and PC — just open in Chrome.
 
 | Component | Effect |
 |-----------|--------|
-| Bank Balance | Added |
-| Cash / UPI | Added |
-| Investments | Added |
-| Lent (pending) | Added |
-| Given/Help (if opted in) | Added |
-| Property Value | Added |
-| Borrowed (owed by you) | Deducted |
-| EMI Remaining Balance | Deducted |
+| Bank Balance | ✅ Added |
+| Cash / UPI | ✅ Added |
+| Investments | ✅ Added |
+| Lent (pending) | ✅ Added |
+| Given/Help (if opted in) | ✅ Added |
+| Property Value | ✅ Added |
+| Borrowed (owed by you) | ➖ Deducted |
+| EMI Remaining Balance | ➖ Deducted |
 
 ---
 
-## 📱 Skip vs Inactive vs Delete
+## 📱 Skip vs Inactive vs Preclosure vs Delete
 
 | Action | Effect |
 |--------|--------|
-| ⏸ Skip | Hide for one specific month only |
-| 🚫 Inactive | Hide from current month onwards — past months untouched |
-| 🗑️ Delete | Permanently removes from all months |
+| ⏸ Skip | Hide for **one specific month** only |
+| 🚫 Inactive | Hide from **current month onwards** — past untouched |
+| ✅ Preclose | Loan fully closed — hidden from **next month onwards**, past history preserved |
+| 🗑️ Delete | Permanently removes from **all months** |
+
+---
+
+## 💡 EMI Preclosure Tips
+
+When you preclose a loan early:
+- The bank charges you **less than the sum of remaining EMIs** (they waive future interest)
+- The difference = **interest you saved**
+- FinanceFlow shows this saving automatically on preclosed EMI cards
+- Use the **"If I preclose today?"** calculator on any active EMI to estimate savings before calling the bank
 
 ---
 
@@ -143,16 +159,16 @@ Works on Android, iPhone, and PC — just open in Chrome.
 
 ### On Android
 1. Open the link in **Chrome**
-2. Tap ⋮ menu → **Add to Home Screen**
-3. Use like a native app — works offline
+2. Tap ⋮ → **Add to Home Screen**
+3. Use like a native app — works offline ✅
 
 ### On PC
 1. Open the link in **Chrome**
 2. Bookmark for quick access
 
 ### Cross-Device Sync
-1. Tap **🔄 Backup / Sync** on the dashboard
-2. Follow the 5-step Google Drive setup guide (built into the app)
+1. Tap **🔄 Backup / Sync** on dashboard
+2. Follow the 5-step Google Drive setup guide (built into app)
 3. Sign in on any device — data loads automatically
 
 ---
@@ -163,7 +179,7 @@ Works on Android, iPhone, and PC — just open in Chrome.
 - Stored in your own **browser localStorage**
 - Synced only to **your own Google Drive**
 - No ads, no tracking, no subscriptions
-- Open source — every line of code is visible in the HTML file
+- Open source — every line of code visible in the HTML file
 
 ---
 
